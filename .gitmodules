@@ -1,0 +1,6 @@
+[submodule "dependencies/easywsclient"]
+	path = dependencies/easywsclient
+	url = https://github.com/dhbaird/easywsclient
+[submodule "dependencies/json"]
+	path = dependencies/json
+	url = https://github.com/nlohmann/json
