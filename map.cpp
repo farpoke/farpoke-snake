@@ -120,6 +120,28 @@ int Map::countClosest(int id) const {
     return count;
 }
 
+int Map::countTies(int id) const {
+    auto count = 0;
+    auto& distances = distancesMap.at(id);
+    for (size_t idx = 0; idx < cells.size(); idx++) {
+        if (distances[idx] == std::numeric_limits<int>::max())
+            continue;
+        else if (getClosestSnake(idx) == -1)
+            count++;
+    }
+    return count;
+}
+
+int Map::countAccessible(int id) const {
+    auto count = 0;
+    auto& distances = distancesMap.at(id);
+    for (size_t idx = 0; idx < cells.size(); idx++) {
+        if (distances[idx] < std::numeric_limits<int>::max())
+            count++;
+    }
+    return count;
+}
+
 bool Map::hasFood(Coord coord) const {
     return std::find(foodIndices.begin(), foodIndices.end(), coord.x + coord.y * width) != foodIndices.end();
 }

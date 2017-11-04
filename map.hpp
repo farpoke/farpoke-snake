@@ -92,9 +92,13 @@ public:
 
     void updateAllDistances();
     void updateDistances(int id);
-    int getClosestSnake(Coord coord) const;
+
     int getClosestSnake(int idx) const;
+    int getClosestSnake(Coord coord) const;
+
     int countClosest(int id) const;
+    int countTies(int id) const;
+    int countAccessible(int id) const;
 
     bool hasFood(Coord coord) const;
 

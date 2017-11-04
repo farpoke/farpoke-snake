@@ -21,7 +21,8 @@ Move FarpokeSnake::getNextMove(Map& map) {
     if constexpr (MEASURE_THINKING_TIME)
         start_time = high_resolution_clock::now();
     //
-    auto my_head = map.getHeads().at(getId());
+    const auto id = getId();
+    auto my_head = map.getHeads().at(id);
     auto current_move = Move::Left;
     auto current_move_score = std::numeric_limits<int>::min();
     //
@@ -29,13 +30,14 @@ Move FarpokeSnake::getNextMove(Map& map) {
         auto new_head = my_head + move;
         if (!map.isInside(new_head) || map[new_head].obstructed)
             continue;
-        map.setHead(getId(), new_head);
-        auto score = map.countClosest(getId());
+        map.setHead(id, new_head);
+        auto score 
+            = map.countClosest(id) * CLOSEST_CELL_SCORE
+            + map.countTies(id) * CELL_TIE_SCORE
+            + map.countAccessible(id) * ACCESSIBILITY_SCORE;
         for (auto& head : map.getHeads()) {
-            if (new_head.distance(head.second) == 1) {
-                std::cout << "- collision warning!\n";
+            if (new_head.distance(head.second) == 1)
                 score -= COLLISION_WARNING_PENALTY;
-            }
         }
         if (map.hasFood(new_head))
             score += FOOD_BONUS;
