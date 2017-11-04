@@ -27,7 +27,10 @@ int main(int, char*[]) {
         ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOW);
     };
 
-    client.run<FarpokeSnake>();
+    if constexpr (REPLAY_FILE == nullptr)
+        client.run<FarpokeSnake>();
+    else
+        client.replay<FarpokeSnake>(REPLAY_FILE);
 
     if constexpr (PAUSE_BEFORE_EXIT)
         std::getchar();

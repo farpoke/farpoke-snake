@@ -29,11 +29,6 @@ Map::Map(const nlohmann::json& map_json)
     updateAllDistances();
 }
 
-//Map::Map(const Map& other_map) : Map(other_map.width, other_map.height) {
-//    cells = other_map.cells;
-//    heads = other_map.heads;
-//}
-
 void Map::setHead(int id, Coord head) {
     heads[id] = head;
     updateDistances(id);
@@ -119,7 +114,7 @@ int Map::getClosestSnake(Coord coord) const {
 
 int Map::countClosest(int id) const {
     auto count = 0;
-    for (auto idx = 0; idx < cells.size(); idx++)
+    for (size_t idx = 0; idx < cells.size(); idx++)
         if (getClosestSnake(idx) == id)
             count++;
     return count;

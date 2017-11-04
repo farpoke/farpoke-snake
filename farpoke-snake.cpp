@@ -32,11 +32,15 @@ Move FarpokeSnake::getNextMove(Map& map) {
         map.setHead(getId(), new_head);
         auto score = map.countClosest(getId());
         for (auto& head : map.getHeads()) {
-            if (my_head.distance(head.second) == 1)
+            if (new_head.distance(head.second) == 1) {
+                std::cout << "- collision warning!\n";
                 score -= COLLISION_WARNING_PENALTY;
+            }
         }
         if (map.hasFood(new_head))
             score += FOOD_BONUS;
+        if (new_head.x == 0 || new_head.y == 0 || new_head.x == map.width - 1 || new_head.y == map.height - 1)
+            score -= OUTER_WALL_HUG_PENALTY;
         if (score > current_move_score) {
             current_move = move;
             current_move_score = score;

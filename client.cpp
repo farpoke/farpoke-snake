@@ -1,5 +1,7 @@
 #include "client.hpp"
 
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 
 #include "config.hpp"
@@ -11,6 +13,8 @@ using nlohmann::json;
 
 void SnakeClient::run(SnakePtr snake) {
     this->snake = snake;
+    if constexpr (LOG_INCOMING_JSON)
+        openLogFile();
     connect();
     registerSnake();
     while (socket->getReadyState() != WebSocket::CLOSED) {
@@ -22,9 +26,32 @@ void SnakeClient::run(SnakePtr snake) {
     }
 }
 
+void SnakeClient::replay(std::string filename, SnakePtr snake) {
+    std::cout << "~ RUNNING REPLAY " << filename << " ~\n";
+    std::ifstream replay_file(filename);
+    this->snake = snake;
+    std::string message;
+    while (replay_file.good()) {
+        std::getline(replay_file, message);
+        if (!message.empty())
+            routeMessage(message);
+    }
+    std::cout << "~ REPLAY END ~\n";
+}
+
 void SnakeClient::stop() {
-    if (socket->getReadyState() != WebSocket::CLOSED)
+    if (socket && socket->getReadyState() != WebSocket::CLOSED)
         socket->close();
+}
+
+void SnakeClient::openLogFile() {
+    std::ostringstream oss;
+    auto t = std::time(nullptr);
+    tm tm;
+    localtime_s(&tm, &t);
+    oss << std::put_time(&tm, LOG_FILE_PATH_FORMAT);
+    logFile.open(oss.str(), std::ofstream::out | std::ofstream::trunc);
+    std::cout << "Logging incomming json to " << oss.str() << "\n";
 }
 
 void SnakeClient::connect() {
@@ -55,11 +82,14 @@ void SnakeClient::maybeSendHeartbeat() {
 
 void SnakeClient::routeMessage(const std::string& message) {
     auto json_in = json::parse(message);
+    auto type = json_in["type"];
     //
+    if constexpr (LOG_INCOMING_JSON) {
+        if (type != messages::HEART_BEAT_RESPONSE)
+            logFile << message << "\n";
+    }
     if constexpr (DUMP_INCOMING_JSON)
         std::cout << json_in.dump(2) << std::endl;
-    //
-    auto type = json_in["type"];
     //
     // Player registration
     if (type == messages::PLAYER_REGISTERED) {
@@ -93,7 +123,8 @@ void SnakeClient::routeMessage(const std::string& message) {
             Map map(json_map);
             auto move = snake->getNextMove(map);
             auto response = messages::register_move(toString(move), json_in);
-            socket->send(response.dump());
+            if (socket)
+                socket->send(response.dump());
         }
     }
     //

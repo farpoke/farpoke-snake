@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <memory>
 
@@ -23,11 +24,19 @@ public:
         run(std::make_shared<T>(std::forward<Args>(args)...));
     }
 
+    void replay(std::string filename, SnakePtr snake);
+
+    template<typename T, typename ... Args>
+    void replay(std::string filename, Args && ... args) {
+        replay(filename, std::make_shared<T>(std::forward<Args>(args)...));
+    }
+
     void stop();
 
     std::function<void(std::string)> gameLinkCallback;
 
 private:
+    void openLogFile();
     void connect();
     void sendClientInfo();
     void registerSnake();
@@ -40,4 +49,5 @@ private:
     clock::time_point lastHeartbeat;
     SnakePtr snake;
     bool alive;
+    std::ofstream logFile;
 };
