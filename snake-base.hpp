@@ -22,7 +22,7 @@ public:
 
     virtual void gameStarting();
 
-    virtual Move getNextMove(const Map& map) = 0;
+    virtual Move getNextMove(Map& map) = 0;
 
     const std::string name;
 

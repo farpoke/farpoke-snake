@@ -11,7 +11,7 @@ using namespace std::chrono;
 
 FarpokeSnake::FarpokeSnake() : SnakeBase(SNAKE_NAME) {}
 
-Move FarpokeSnake::getNextMove(const Map& map) {
+Move FarpokeSnake::getNextMove(Map& map) {
     if constexpr (PRINT_MAP)
         map.print(getId());
     //
@@ -24,15 +24,14 @@ Move FarpokeSnake::getNextMove(const Map& map) {
     auto my_head = map.getHeads().at(getId());
     auto current_move = Move::Left;
     auto current_move_score = std::numeric_limits<int>::min();
+    //
     for (auto move : ALL_MOVES) {
         auto new_head = my_head + move;
         if (!map.isInside(new_head) || map[new_head].obstructed)
             continue;
-        auto future_map = map;
-        future_map.setHead(getId(), new_head);
-        future_map.updateClosest();
-        auto score = future_map.countClosest(getId());
-        for (auto& head : future_map.getHeads()) {
+        map.setHead(getId(), new_head);
+        auto score = map.countClosest(getId());
+        for (auto& head : map.getHeads()) {
             if (my_head.distance(head.second) == 1)
                 score -= COLLISION_WARNING_PENALTY;
         }
@@ -43,6 +42,7 @@ Move FarpokeSnake::getNextMove(const Map& map) {
             current_move_score = score;
         }
     }
+    //
     if constexpr (MEASURE_THINKING_TIME) {
         auto duration = high_resolution_clock::now() - start_time;
         clock_accumulator += duration;
@@ -54,5 +54,6 @@ Move FarpokeSnake::getNextMove(const Map& map) {
             ticks_count = 0;
         }
     }
+    //
     return current_move;
 }

@@ -7,7 +7,7 @@ class FarpokeSnake : public SnakeBase
 public:
     FarpokeSnake();
 
-    Move getNextMove(const Map& map) override;
+    Move getNextMove(Map& map) override;
 
 private:
 

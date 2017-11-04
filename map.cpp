@@ -11,7 +11,7 @@ Map::Map(const nlohmann::json& map_json)
     : Map(map_json["width"], map_json["height"])
 {
     for (auto& cell : cells) {
-        cell = Cell { false, -1, -1 };
+        cell = Cell { false };
     }
     for (auto& obstacle : map_json["obstaclePositions"])
         (*this)[(int)obstacle].obstructed = true;
@@ -23,12 +23,10 @@ Map::Map(const nlohmann::json& map_json)
         heads[id] = Coord::fromIndex(positions[0], width);
         for (auto& pos : positions)
             at(static_cast<int>(pos)).obstructed = true;
-        /*if (positions.size() > 1 && snake["tailProtectedForGameTicks"] == 0)
-            (*this)[(int)*positions.rbegin()].obstructed = false;*/
     }
     for (auto& index : map_json["foodPositions"])
         foodIndices.push_back(index);
-    updateClosest();
+    updateAllDistances();
 }
 
 //Map::Map(const Map& other_map) : Map(other_map.width, other_map.height) {
@@ -38,6 +36,7 @@ Map::Map(const nlohmann::json& map_json)
 
 void Map::setHead(int id, Coord head) {
     heads[id] = head;
+    updateDistances(id);
 }
 
 void Map::print(int highlight_id) const {
@@ -47,7 +46,7 @@ void Map::print(int highlight_id) const {
             auto cell = at(x, y);
             if (cell.obstructed)
                 std::cout << "#";
-            else if (cell.closestSnake == highlight_id)
+            else if (getClosestSnake({ x, y }) == highlight_id)
                 std::cout << ".";
             else
                 std::cout << " ";
@@ -57,38 +56,32 @@ void Map::print(int highlight_id) const {
     std::cout << "\n";
 }
 
-void Map::updateClosest() {
-    for (auto& cell : cells) {
-        cell.closestSnake = -1;
-        cell.closestDistance = std::numeric_limits<decltype(cell.closestDistance)>::max();
-    }
-    //
-    using QueueEntry = std::tuple<int, Coord, int>; // snake-id, coordinate, distance
-    std::queue<QueueEntry> queue;
+void Map::updateAllDistances() {
     for (auto& kvp : heads)
-        queue.emplace(kvp.first, kvp.second, 0);
+        updateDistances(kvp.first);
+}
+
+void Map::updateDistances(int id) {
+    if (heads.find(id) == heads.end())
+        throw std::runtime_error("invalid or missing head");
     //
-    int id, distance;
+    std::vector<int> distances(cells.size(), std::numeric_limits<int>::max());
+    //
+    using QueueEntry = std::pair<Coord, int>; // coordinate, distance
+    std::queue<QueueEntry> queue;
+    queue.emplace(heads[id], 0);
+    //
     Coord coord;
+    int distance;
     while (!queue.empty()) {
-        std::tie(id, coord, distance) = queue.front();
+        std::tie(coord, distance) = queue.front();
         queue.pop();
         //
-        auto& cell = at(coord);
-        if (cell.closestDistance < distance)
+        auto idx = coord.x + coord.y * width;
+        if (distances[idx] <= distance)
             continue;
-        else if (cell.closestDistance == distance) {
-            if (cell.closestSnake == id)
-                continue; // Revisit own closest cell
-            else if (cell.closestSnake < 0)
-                continue; // Tie cell
-            else
-                cell.closestSnake = -1; // Change to tie cell
-        }
-        else {
-            cell.closestSnake = id;
-            cell.closestDistance = distance;
-        }
+        else
+            distances[idx] = distance;
         //
         for (auto move : ALL_MOVES) {
             auto new_coord = coord + move;
@@ -96,15 +89,38 @@ void Map::updateClosest() {
                 continue;
             else if (at(new_coord).obstructed)
                 continue;
-            queue.emplace(id, new_coord, distance + 1);
+            queue.emplace(new_coord, distance + 1);
         }
     }
+    //
+    distancesMap[id] = distances;
+}
+
+int Map::getClosestSnake(int idx) const {
+    auto winner = -1;
+    auto winner_distance = std::numeric_limits<int>::max();
+    for (auto& kvp : distancesMap) {
+        const auto dist = kvp.second[idx];
+        if (dist > winner_distance)
+            continue;
+        else if (dist < winner_distance) {
+            winner_distance = dist;
+            winner = kvp.first;
+        }
+        else
+            winner = -1; // tie
+    }
+    return winner;
+}
+
+int Map::getClosestSnake(Coord coord) const {
+    return getClosestSnake(coord.x + coord.y * width);
 }
 
 int Map::countClosest(int id) const {
     auto count = 0;
-    for (auto& cell : cells)
-        if (cell.closestSnake == id)
+    for (auto idx = 0; idx < cells.size(); idx++)
+        if (getClosestSnake(idx) == id)
             count++;
     return count;
 }

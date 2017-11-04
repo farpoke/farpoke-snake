@@ -53,8 +53,6 @@ static_assert(std::is_literal_type_v<Coord>, "Coord is not a literal type");
 
 struct Cell {
     bool obstructed;
-    int closestSnake;
-    int closestDistance;
 };
 
 static_assert(std::is_literal_type_v<Cell>, "Cell is not a literal type");
@@ -92,7 +90,10 @@ public:
 
     void print(int highlight_id=-1) const;
 
-    void updateClosest();
+    void updateAllDistances();
+    void updateDistances(int id);
+    int getClosestSnake(Coord coord) const;
+    int getClosestSnake(int idx) const;
     int countClosest(int id) const;
 
     bool hasFood(Coord coord) const;
@@ -100,5 +101,6 @@ public:
 private:
     std::vector<Cell> cells;
     std::map<int, Coord> heads;
+    std::map<int, std::vector<int>> distancesMap;
     std::vector<int> foodIndices;
 };
