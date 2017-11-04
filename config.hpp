@@ -30,9 +30,18 @@ static constexpr auto LOG_FILE_PATH_FORMAT = "play-log-%Y-%m-%d-%H-%M-%S.txt";
 static constexpr auto REPLAY_FILE = nullptr;
 
 static constexpr auto CLOSEST_CELL_SCORE = 2;
-static constexpr auto CELL_TIE_SCORE = 5;
-static constexpr auto ACCESSIBILITY_SCORE = 0;
+static constexpr auto CELL_TIE_SCORE = 1;
+static constexpr auto ACCESSIBILITY_SCORE = 1;
 
-static constexpr auto COLLISION_WARNING_PENALTY = 100;
+static constexpr auto COLLISION_WARNING_PENALTY = 1000;
 static constexpr auto FOOD_BONUS = 0;
 static constexpr auto OUTER_WALL_HUG_PENALTY = 0;
+
+static constexpr auto MAX_DISTANCE_CALCULATED = 25;
+
+static constexpr auto TARGET_SEARCH_DEPTH = 5;
+
+#undef min
+static constexpr auto MIN_SCORE = std::numeric_limits<int>::min();
+static constexpr auto DEATH_SCORE = -100000;
+static constexpr auto DEATH_SCORE_DEPTH_FACTOR = 100;

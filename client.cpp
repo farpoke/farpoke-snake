@@ -119,9 +119,11 @@ void SnakeClient::routeMessage(const std::string& message) {
     // Map update
     else if (type == messages::MAP_UPDATE) {
         if (alive) {
+            auto tick = static_cast<int>(json_in["gameTick"]);
+            std::cout << tick << "\r";
             auto json_map = json_in["map"];
             Map map(json_map);
-            auto move = snake->getNextMove(map);
+            auto move = snake->getNextMove(tick, map);
             auto response = messages::register_move(toString(move), json_in);
             if (socket)
                 socket->send(response.dump());

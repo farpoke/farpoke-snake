@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <vector>
 
 #include <json.hpp>
@@ -101,6 +102,9 @@ public:
     int countAccessible(int id) const;
 
     bool hasFood(Coord coord) const;
+
+    std::optional<Coord> move(int id, Move move);
+    void undoMove(int id, Move move);
 
 private:
     std::vector<Cell> cells;

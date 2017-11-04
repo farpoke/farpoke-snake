@@ -3,6 +3,7 @@
 #include <iostream>
 #include <queue>
 
+#include "config.hpp"
 #include "player-registry.hpp"
 
 Map::Map(int w, int h) : width(w), height(h), cells(w * h) {}
@@ -26,7 +27,6 @@ Map::Map(const nlohmann::json& map_json)
     }
     for (auto& index : map_json["foodPositions"])
         foodIndices.push_back(index);
-    updateAllDistances();
 }
 
 void Map::setHead(int id, Coord head) {
@@ -77,6 +77,9 @@ void Map::updateDistances(int id) {
             continue;
         else
             distances[idx] = distance;
+        //
+        if (distance >= MAX_DISTANCE_CALCULATED)
+            continue;
         //
         for (auto move : ALL_MOVES) {
             auto new_coord = coord + move;
@@ -144,4 +147,22 @@ int Map::countAccessible(int id) const {
 
 bool Map::hasFood(Coord coord) const {
     return std::find(foodIndices.begin(), foodIndices.end(), coord.x + coord.y * width) != foodIndices.end();
+}
+
+std::optional<Coord> Map::move(int id, Move move) {
+    auto head = heads[id];
+    auto new_head = head + move;
+    if (!isInside(new_head))
+        return {};
+    else if (at(new_head).obstructed)
+        return {};
+    at(new_head).obstructed = true;
+    heads[id] = new_head;
+    return new_head;
+}
+
+void Map::undoMove(int id, Move move) {
+    auto head = heads[id];
+    at(head).obstructed = false;
+    heads[id] = head - move;
 }
