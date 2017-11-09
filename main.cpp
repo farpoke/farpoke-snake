@@ -24,7 +24,8 @@ int main(int, char*[]) {
     SnakeClient client;
 
     client.gameLinkCallback = [](std::string url) {
-        ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOW);
+        if (OPEN_GAME_LINK)
+            ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOW);
     };
 
     if constexpr (REPLAY_FILE == nullptr)

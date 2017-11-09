@@ -54,6 +54,7 @@ static_assert(std::is_literal_type_v<Coord>, "Coord is not a literal type");
 
 struct Cell {
     bool obstructed;
+    short regionNumber;
 };
 
 static_assert(std::is_literal_type_v<Cell>, "Cell is not a literal type");
@@ -100,15 +101,21 @@ public:
     int countClosest(int id) const;
     int countTies(int id) const;
     int countAccessible(int id) const;
+    int countOpponentAccessible(int id) const;
 
     bool hasFood(Coord coord) const;
 
     std::optional<Coord> move(int id, Move move);
     void undoMove(int id, Move move);
 
+    int assignRegions();
+    constexpr int getRegionCount() const { return regionCount; }
+    int getRegionSize(int number) const;
+
 private:
     std::vector<Cell> cells;
     std::map<int, Coord> heads;
     std::map<int, std::vector<int>> distancesMap;
     std::vector<int> foodIndices;
+    int regionCount;
 };

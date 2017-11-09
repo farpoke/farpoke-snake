@@ -121,6 +121,8 @@ void SnakeClient::routeMessage(const std::string& message) {
         if (alive) {
             auto tick = static_cast<int>(json_in["gameTick"]);
             std::cout << tick << "\r";
+            if (DEBUG_MODE && FIRST_REPLAY_TICK > tick)
+                return;
             auto json_map = json_in["map"];
             Map map(json_map);
             auto move = snake->getNextMove(tick, map);

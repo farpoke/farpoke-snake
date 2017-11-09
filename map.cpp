@@ -145,6 +145,15 @@ int Map::countAccessible(int id) const {
     return count;
 }
 
+int Map::countOpponentAccessible(int id) const {
+    int total = 0;
+    for (auto& kvp : heads) {
+        if (kvp.first != id)
+            total += countAccessible(kvp.first);
+    }
+    return total;
+}
+
 bool Map::hasFood(Coord coord) const {
     return std::find(foodIndices.begin(), foodIndices.end(), coord.x + coord.y * width) != foodIndices.end();
 }
@@ -153,9 +162,9 @@ std::optional<Coord> Map::move(int id, Move move) {
     auto head = heads[id];
     auto new_head = head + move;
     if (!isInside(new_head))
-        return {};
+        return std::nullopt;
     else if (at(new_head).obstructed)
-        return {};
+        return std::nullopt;
     at(new_head).obstructed = true;
     heads[id] = new_head;
     return new_head;
@@ -165,4 +174,43 @@ void Map::undoMove(int id, Move move) {
     auto head = heads[id];
     at(head).obstructed = false;
     heads[id] = head - move;
+}
+
+int Map::assignRegions() {
+    for (auto& cell : cells)
+        cell.regionNumber = -1;
+    regionCount = 0;
+    const std::function<void(Coord)> fill_region = [&](Coord start_coord) {
+        std::vector<Coord> coords;
+        coords.push_back(start_coord);
+        while (!coords.empty()) {
+            const auto coord = coords.back();
+            coords.pop_back();
+            if (!isInside(coord))
+                return;
+            auto& cell = at(coord);
+            if (cell.obstructed || cell.regionNumber != -1)
+                return;
+            cell.regionNumber = regionCount;
+            for (auto move : ALL_MOVES)
+                coords.push_back(coord + move);
+        }
+    };
+    for (int x = 0; x < width; x++) for (int y = 0; y < height; y++) {
+        const Coord coord { x, y };
+        auto& cell = at(coord);
+        if (cell.obstructed || cell.regionNumber != -1)
+            continue;
+        regionCount++;
+        fill_region(coord);
+    }
+    return regionCount;
+}
+
+int Map::getRegionSize(int number) const {
+    int count = 0;
+    for (auto& cell : cells)
+        if (cell.regionNumber == number)
+            count++;
+    return count;
 }
